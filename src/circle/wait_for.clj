@@ -137,7 +137,7 @@
          :or {sleep (time/secs 1)}} options
         tries (if (and sleep timeout (not (-> options :tries)))
                 :unlimited
-                (or (-> options :tries) 10))
+                (get options :tries 3))
         _ (when sleep
             (throw-if-not (period? sleep) "sleep must be a period"))
         end-time (when timeout
