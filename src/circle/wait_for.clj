@@ -94,8 +94,7 @@
           (throw+))))))
 
 (defn wait-for
-  "Like robert bruce, but waits for arbitrary results rather than just
-  exceptions.
+  "Higher Order Function that controls retry behavior. By default, call f, and retry (by calling again), if f returns falsey.
 
  - f - a fn of no arguments.
 
@@ -104,31 +103,31 @@
  - sleep: how long to sleep between retries, as a joda
    period. Defaults to 1s.
 
- - tries: how many times to retry before throwing. Defaults to 10 (or
-   unlimited if timeout is given)
+ - tries: number of times to retry before throwing. An integer,
+   or :unlimited. Defaults to 3 (or unlimited if timeout is given, and tries is not)
 
  - timeout: a joda period. Stop retrying when period has elapsed,
    regardless of how many tries are left.
 
- - catch: Can be one of several things:
+ - catch: By default, wait-for does not catch exceptions. Pass this to specify which exceptions should be caught and retried
+     Can be one of several things:
      - a seq of exception classes to catch and retry on
-     - an fn of one argument, the thrown exception
+     - an fn of one argument, the thrown exception. Retry if it returns truthy.
      - if the exception is a slingshot throwing a map, can be a
        keyword, or a vector of a key and value, destructuring
-       slingshot-style.
+       slingshot-style. Retry if the value obtained by destrutcturing is truthy
 
    If the exception matches the catch clause, wait-for
-   retries. Otherwise, the error-hook is called, and then the
-   exception is thrown.
+   retries. Otherwise the exception is thrown.
 
  - success-fn: a fn of one argument, the return value of f. Stop
    retrying if success-fn returns truthy. If not specified, wait-for
    returns when f returns truthy. May pass :no-throw here, which will
-   return truthy when the f doesn't throw.
+   return truthy when f doesn't throw.
 
  - error-hook: a fn of one argument, an exception. Called every time
    fn throws, before the catch clause decides what to do with the
-   exception"
+   exception. This is useful for e.g. logging."
 
   {:arglists
    '([fn] [options fn])}
