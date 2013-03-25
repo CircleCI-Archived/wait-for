@@ -65,11 +65,18 @@
 (defn period->millis [p]
   (-> p period->secs (* 1000)))
 
+(defn- sleep-for [time]
+  (cond (period? time)
+        (Thread/sleep (period->millis time))
+        
+        (integer? time)
+        (Thread/sleep time)))
+
 (defn fail
   "stuff to do when an iteration fails. Returns new options"
   [options]
-  (when (-> options :sleep)
-    (Thread/sleep (-> options :sleep period->millis)))
+  (when (:sleep options)
+    (sleep-for (:sleep options)))
   (update-in options [:tries] (fn [tries]
                                 (if (integer? tries)
                                   (dec tries)
@@ -101,12 +108,12 @@
  Options:
 
  - sleep: how long to sleep between retries, as a joda
-   period. Defaults to 1s.
+   period, or an integer representing a number of milliseconds. Defaults to 1s.
 
  - tries: number of times to retry before throwing. An integer,
    or :unlimited. Defaults to 3 (or unlimited if timeout is given, and tries is not)
 
- - timeout: a joda period. Stop retrying when period has elapsed,
+ - timeout: a joda period, or an integer representing a number of milliseconds. Stop retrying when period has elapsed,
    regardless of how many tries are left.
 
  - catch: By default, wait-for does not catch exceptions. Pass this to specify which exceptions should be caught and retried
@@ -139,10 +146,14 @@
                 :unlimited
                 (get options :tries 3))
         _ (when sleep
-            (throw-if-not (period? sleep) "sleep must be a period"))
+            (throw-if-not (or (period? sleep) (integer? sleep))
+                          "sleep must be a Period or an integer representing n milliseconds"))
         end-time (when timeout
-                   (throw-if-not (period? timeout) "timeout must be a joda period")
-                   (time/plus (time/now) timeout))
+                   (throw-if-not (or (period? timeout) (integer? timeout))
+                                 "timeout must be a joda Period or an integer representing n milliseconds")
+                   (if (period? timeout)
+                     (time/plus (time/now) timeout)
+                     (time/plus (time/now) (time/millis timeout))))
         options (-> options
                     (assoc :end-time end-time)
                     (assoc :tries tries)

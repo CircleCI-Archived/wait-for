@@ -38,6 +38,14 @@
             (fn []
               (foo))) => true
   (provided
+   (foo) =streams=> [false false false false true] :times 5))
+
+(fact "wait-for accepts longs (millis) for :sleep"
+  (wait-for {:sleep 1
+             :tries 10}
+            (fn []
+              (foo))) => true
+  (provided
     (foo) =streams=> [false false false false true] :times 5))
 
 (fact "wait-for throws on timeout"
@@ -72,6 +80,18 @@
   (wait-for {:sleep (time/millis 1)
              :tries 10
              :timeout (time/millis 400)
+             :success-fn (fn [v]
+                           (= v 42))}
+            (fn []
+              (Thread/sleep 100)
+              (foo))) => (throws Exception)
+   (provided
+    (foo) =streams=> [0 1 2 3 4 5 6 7 8 9 10] :times 4))
+
+(fact "timeout accepts long value"
+  (wait-for {:sleep 1
+             :tries 10
+             :timeout 400
              :success-fn (fn [v]
                            (= v 42))}
             (fn []
