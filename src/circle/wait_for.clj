@@ -134,7 +134,7 @@
   [& args]
   (let [{:keys [options f] :as parsed-args} (parse-args args)
         {:keys [success-fn timeout tries sleep]
-         :or {sleep (time/secs 1)}} options
+         :or {sleep (Period/seconds 1)}} options
         tries (if (and sleep timeout (not (-> options :tries)))
                 :unlimited
                 (get options :tries 3))

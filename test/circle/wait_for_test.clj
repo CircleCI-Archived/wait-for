@@ -158,6 +158,13 @@
   (provided
     (foo) => false :times 3))
 
+(fact "supports default sleep value"
+  (wait-for {:tries 2}
+            (fn []
+              (foo))) => (throws Exception)
+  (provided
+    (foo) => false :times 2))
+
 (fact ":no-throw works"
   (wait-for {:tries 3
              :sleep nil
